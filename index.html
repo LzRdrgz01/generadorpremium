@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Enlaces TMDB</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #eee;
+    }
+
+    .container {
+      background: #1e1e1e;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      padding: 30px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    h2 {
+      color: #ffffff;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      margin: 10px 0 5px;
+      font-weight: 500;
+      color: #ccc;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #444;
+      margin-bottom: 15px;
+      font-size: 16px;
+      background-color: #2b2b2b;
+      color: #f0f0f0;
+      transition: 0.3s;
+    }
+
+    input:focus, select:focus {
+      border-color: #888;
+      outline: none;
+    }
+
+    button {
+      background-color: #4e9af1;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #357de8;
+    }
+
+    #resultado {
+      margin-top: 20px;
+      background: #252525;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.05);
+      word-break: break-word;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .enlace-generado {
+      margin-bottom: 10px;
+      color: #4eaaff;
+    }
+
+    .copiar-btn {
+      background-color: #2ecc71;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      color: #fff;
+      transition: background 0.3s ease;
+    }
+
+    .copiar-btn:hover {
+      background-color: #27ae60;
+    }
+
+    .copiado {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #9be7a5;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>🌌 Generador de Enlaces StreemKeflix</h2>
+
+    <label for="tipo">Tipo de contenido:</label>
+    <select id="tipo">
+      <option value="movie">🎥 Película</option>
+      <option value="tv">📺 Serie</option>
+    </select>
+
+    <label for="tmdbId">ID de TMDB:</label>
+    <input type="text" id="tmdbId" placeholder="Ej. 603 (The Matrix)" />
+
+    <label for="urlFinal">URL final del video:</label>
+    <input type="text" id="urlFinal" placeholder="https://miweb.com/video.mp4" />
+
+    <button onclick="generarEnlace()">⚙️ Generar Enlace</button>
+
+    <div id="resultado"></div>
+  </div>
+
+  <script>
+    async function generarEnlace() {
+      const tipo = document.getElementById("tipo").value;
+      const tmdbId = document.getElementById("tmdbId").value.trim();
+      const urlFinal = encodeURIComponent(document.getElementById("urlFinal").value.trim());
+      const apiKey = "1d79b0abc34e3411aed8ee793526693d";
+      const lenguaje = "es-ES";
+
+      if (!tmdbId || !urlFinal) {
+        alert("⚠️ Por favor, completa todos los campos.");
+        return;
+      }
+
+      const apiURL = tipo === "movie"
+        ? `https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${apiKey}&language=${lenguaje}`
+        : `https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${apiKey}&language=${lenguaje}`;
+
+      try {
+        const response = await fetch(apiURL);
+        if (!response.ok) throw new Error("No se pudo obtener datos de TMDB");
+
+        const data = await response.json();
+        const titulo = encodeURIComponent(tipo === "movie" ? data.title : data.name);
+        const enlace = `https://streemkeflixserv.blogspot.com/?titulo=LzPlay: ${titulo}&link=${urlFinal}`;
+
+        document.getElementById("resultado").innerHTML = `
+          <div class="enlace-generado">
+            <strong>✅ Enlace generado:</strong><br>
+            <a id="linkGenerado" href="${enlace}" target="_blank">${enlace}</a>
+          </div>
+          <button class="copiar-btn" onclick="copiarEnlace()">📋 Copiar Enlace</button>
+          <div id="mensajeCopiado" class="copiado" style="display:none;">✅ Copiado al portapapeles</div>
+        `;
+      } catch (error) {
+        document.getElementById("resultado").innerHTML = `
+          ❌ Ocurrió un error. Verifica el ID y la conexión.
+        `;
+      }
+    }
+
+    function copiarEnlace() {
+      const enlace = document.getElementById("linkGenerado").href;
+      navigator.clipboard.writeText(enlace).then(() => {
+        const mensaje = document.getElementById("mensajeCopiado");
+        mensaje.style.display = "block";
+        setTimeout(() => mensaje.style.display = "none", 2000);
+      });
+    }
+  </script>
+
+</body>
+</html>
